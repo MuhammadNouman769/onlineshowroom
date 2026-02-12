@@ -46,7 +46,6 @@ def car_list_view(request):
             return Response(serializer.errors)
     return None
 
-
 '''------------- Signal object api ---------------'''
 
 @api_view()
