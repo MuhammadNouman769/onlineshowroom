@@ -3,8 +3,12 @@ from .models import Cars
 from django.http import JsonResponse
 from django.http import HttpResponse
 import json
+from .serializers import CarSeriliazer
+from rest_framework.views import APIView
+from rest_framework.response import  Response
+from rest_framework.decorators import api_view
 
-'''------------- Car View --------------'''
+'''------------- Manual Api View --------------'''
 def car_list(request):
     cars = Cars.objects.all()
     data = {
@@ -24,4 +28,20 @@ def car_detail(request, pk):
     }
     return JsonResponse(data)
     
-    
+''' ------------- Seriliazers Api get objects list --------------- '''
+
+@api_view()
+def car_list_view(request):
+    car = Cars.objects.all()
+    serializer = CarSeriliazer(car, many=True)
+    return Response(serializer.data)
+        
+
+'''------------- Singal object api ---------------'''
+
+@api_view()
+def car_detail_view(request, pk):
+    car = Cars.objects.get(pk=pk)
+    serializer = CarSeriliazer(car)
+    return Response(serializer.data)
+        
