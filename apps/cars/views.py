@@ -30,13 +30,21 @@ def car_detail(request, pk):
     
 ''' ------------- Seriliazers Api get objects list --------------- '''
 
-@api_view()
+@api_view(['GET', 'POST'])
 def car_list_view(request):
-    car = Cars.objects.all()
-    serializer = CarSeriliazer(car, many=True)
-    return Response(serializer.data)
+    if request.method == 'GET':
+        car = Cars.objects.all()
+        serializer = CarSeriliazer(car, many=True)
+        return Response(serializer.data)
+            
+    if request.method == 'POST':
+        serializer = CarSeriliazer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
         
-
 '''------------- Singal object api ---------------'''
 
 @api_view()
