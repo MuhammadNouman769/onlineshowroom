@@ -28,7 +28,7 @@ def car_detail(request, pk):
     }
     return JsonResponse(data)
     
-''' ------------- Seriliazers Api get objects list --------------- '''
+''' ------------- Serializers Api get objects list --------------- '''
 
 @api_view(['GET', 'POST'])
 def car_list_view(request):
@@ -44,8 +44,10 @@ def car_list_view(request):
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
-        
-'''------------- Singal object api ---------------'''
+    return None
+
+
+'''------------- Signal object api ---------------'''
 
 @api_view()
 def car_detail_view(request, pk):
