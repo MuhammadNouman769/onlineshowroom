@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import  Response
 from rest_framework.decorators import api_view
 from rest_framework import status
+from django.shortcuts import get_object_or_404
 
 '''------------- Manual Api View --------------'''
 def car_list(request):
@@ -30,47 +31,52 @@ def car_detail(request, pk):
     return JsonResponse(data)
     
 ''' ------------- Serializers Api get objects list --------------- '''
-
 @api_view(['GET', 'POST'])
 def car_list_view(request):
-    if request.method == 'GET':
-        try:
-            cars = Cars.objects.all()
-        except:
-            return Response({'error': 'No cars found'})
-        car = Cars.objects.all()
-        serializer = CarSeriliazer(car, many=True)
-        return Response(serializer.data)
-            
-    if request.method == 'POST':
-        serializer = CarSeriliazer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors)
-    return None
 
+    # GET → list all cars
+    if request.method == 'GET':
+        cars = Cars.objects.all()
+        serializer = CarSeriliazer(cars, many=True)
+        return Response(serializer.data)
+
+    # POST → single or bulk create
+    elif request.method == 'POST':
+
+        is_many = isinstance(request.data, list)
+        serializer = CarSeriliazer(data=request.data, many=is_many)
+
+        if serializer.is_valid():
+            if is_many:
+                cars = [Cars.objects.create(**item) for item in serializer.validated_data]
+                return Response(CarSeriliazer(cars, many=True).data,
+                                status=status.HTTP_201_CREATED)
+
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 '''------------- Signal object api ---------------'''
 
-@api_view(['GET', 'POST','DELETE'])
+@api_view(['GET', 'PUT', 'DELETE'])
 def car_detail_view(request, pk):
+
+    car = get_object_or_404(Cars, pk=pk)
+
+    # GET
     if request.method == 'GET':
-        car = Cars.objects.get(pk=pk)
         serializer = CarSeriliazer(car)
         return Response(serializer.data)
-    if request.method == 'PUT':
-        car = Cars.objects.get(pk=pk)
-        serializer = CarSeriliazer(car,data=request.data)
+
+    # UPDATE
+    elif request.method == 'PUT':
+        serializer = CarSeriliazer(car, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        else:
-            return Response(serializer.errors)
-        if request.method == 'DELETE':
-            car = Cars.objects.get(pk=pk)
-            car.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # DELETE
+    elif request.method == 'DELETE':
+        car.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
