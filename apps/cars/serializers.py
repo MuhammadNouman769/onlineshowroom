@@ -9,14 +9,15 @@ class ShowRoomSerializer(serializers.ModelSerializer):
 
 
 class CarSerializer(serializers.ModelSerializer):
+    discount_price = serializers.SerializerMethodField()
     class Meta:
         model = Cars
         fields = '__all__'
         '''fields = ['id', 'name', 'description', 'price', 'active', 'chassisnumber']
            exclude = ('name',) '''
-    def get_discounted_price(self, obj):
-        discounted_price = obj.price - 1000
-        return discounted_price
+    def get_discount_price(self, object):
+        get_discount_price = object.price - 1000
+        return discount_price
 
     def validate_price(self, value):
         if value <= Decimal('200.00'):
@@ -36,7 +37,7 @@ class CarSerializer(serializers.ModelSerializer):
 #     name = serializers.CharField()
 #     description = serializers.CharField()
 #     active = serializers.BooleanField(read_only=True)
-#     chassisnumber = serializers.CharField(validators=[alphanumeric])
+#     chassis number = serializers.CharField(validators=[alphanumeric])
 #     price = serializers.DecimalField(max_digits=10, decimal_places=2)
 #
 #     def create(self, validated_data):
@@ -45,7 +46,7 @@ class CarSerializer(serializers.ModelSerializer):
 #     def update(self, instance, validated_data):
 #         instance.name = validated_data.get('name', instance.name)
 #         instance.description = validated_data.get('description', instance.description)
-#         instance.chassisnumber = validated_data.get('chassisnumber', instance.chassisnumber)
+#         instance.chassis number = validated_data.get('chassisnumber', instance.chassisnumber)
 #         instance.price = validated_data.get('price', instance.price)
 #         instance.save()
 #         return instance
