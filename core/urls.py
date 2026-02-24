@@ -21,7 +21,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
-
+# ---------------- Swagger drf_yasg ----------------
 schema_view = get_schema_view(
     openapi.Info(
         title="ShowRoom API",
@@ -33,16 +33,18 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    # Admin
     path('admin/', admin.site.urls),
-    path('all/', include('apps.cars.urls')),
 
-    # Swagger UI
+    # App API routes
+    path('api/', include('apps.cars.urls')),
+
+    # Swagger UI (drf_yasg)
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-
-    # Redoc UI
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+
+    # Spectacular (alternative OpenAPI schema)
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-
 ]
