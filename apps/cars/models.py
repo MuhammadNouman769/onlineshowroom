@@ -1,12 +1,15 @@
+''''''
+""" ============== IMPORTS =============== """
 from wsgiref.validate import validator
 from django.db import models
 from django.core.exceptions import ValidationError
 
-""" ============== Models =============== """
 
 def alphanumeric(value):
     if not str(value).isalnum():
         raise ValidationError('Only alphanumeric characters are allowed')
+
+""" ============== ShowRoom Models =============== """
 
 class ShowRoom(models.Model):
     name = models.CharField(max_length=30)
@@ -16,6 +19,8 @@ class ShowRoom(models.Model):
     def __str__(self):
         return self.name
 
+
+""" ============== Cars Model =============== """
 
 class Cars(models.Model):
     name = models.CharField(max_length=50)
