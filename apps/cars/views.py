@@ -1,29 +1,22 @@
+""" ============== IMPORTS =============== """
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view, schema
+from rest_framework.decorators import api_view
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 from .models import ShowRoom, Cars
 from .serializers import ShowRoomSerializer, CarSerializer
+
 
 # ---------------- ShowRoom APIs ----------------
 
 class ShowRoomListCreate(APIView):
     """
     GET /all/showrooms/
-        - Returns list of all showrooms
-        - Use Case: Display all showrooms to admin or users
-
+        - Returns list of all showrooms.
     POST /all/showrooms/
-        - Create one or multiple showrooms
-        - Use Case: Add new showrooms to the system
-        - Request Example:
-            [
-                {"name": "Luxury Motors", "location": "Lahore", "capacity": 30},
-                {"name": "Fast Wheels", "location": "Islamabad", "capacity": 40}
-            ]
-        - Response: JSON array of created showrooms
+        - Create one or multiple showrooms.
     """
 
     @swagger_auto_schema(
@@ -51,19 +44,10 @@ class ShowRoomListCreate(APIView):
 
 class ShowRoomDetail(APIView):
     """
-    GET /all/showrooms/<pk>/
-        - Retrieve a showroom by ID
-        - Use Case: Show detailed info of a showroom
-
-    PUT /all/showrooms/<pk>/
-        - Replace entire showroom data (strict)
-        - All required fields must be provided
-
-    PATCH /all/showrooms/<pk>/
-        - Update only fields provided (partial update)
-
-    DELETE /all/showrooms/<pk>/
-        - Remove a showroom from the system
+    GET /all/showrooms/<pk>/ - Retrieve a showroom.
+    PUT /all/showrooms/<pk>/ - Full update.
+    PATCH /all/showrooms/<pk>/ - Partial update.
+    DELETE /all/showrooms/<pk>/ - Delete showroom.
     """
 
     def get_object(self, pk):
@@ -91,7 +75,7 @@ class ShowRoomDetail(APIView):
             showroom = self.get_object(pk)
         except ShowRoom.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = ShowRoomSerializer(showroom, data=request.data, partial=False)
+        serializer = ShowRoomSerializer(showroom, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -142,23 +126,20 @@ class ShowRoomDetail(APIView):
 @api_view(['GET', 'POST'])
 def car_list_view(request):
     """
-    GET /all/cars/
-        - List all cars
-
-    POST /all/cars/
-        - Create one or multiple cars
+    GET /all/cars/ - List all cars.
+    POST /all/cars/ - Create one or multiple cars.
     """
     if request.method == 'GET':
         cars = Cars.objects.all()
         serializer = CarSerializer(cars, many=True)
         return Response(serializer.data)
-    elif request.method == 'POST':
-        many = isinstance(request.data, list)
-        serializer = CarSerializer(data=request.data, many=many)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    many = isinstance(request.data, list)
+    serializer = CarSerializer(data=request.data, many=many)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @swagger_auto_schema(
@@ -186,17 +167,10 @@ def car_list_view(request):
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 def car_detail_view(request, pk):
     """
-    GET /all/cars/<pk>/
-        - Retrieve car by ID
-
-    PUT /all/cars/<pk>/
-        - Full update
-
-    PATCH /all/cars/<pk>/
-        - Partial update
-
-    DELETE /all/cars/<pk>/
-        - Remove car from system
+    GET /all/cars/<pk>/ - Retrieve a car.
+    PUT /all/cars/<pk>/ - Full update.
+    PATCH /all/cars/<pk>/ - Partial update.
+    DELETE /all/cars/<pk>/ - Delete a car.
     """
     try:
         car = Cars.objects.get(pk=pk)
@@ -208,7 +182,7 @@ def car_detail_view(request, pk):
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        serializer = CarSerializer(car, data=request.data, partial=False)
+        serializer = CarSerializer(car, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
