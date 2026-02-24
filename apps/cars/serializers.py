@@ -8,28 +8,30 @@ class ShowRoomSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
 class CarSerializer(serializers.ModelSerializer):
     discount_price = serializers.SerializerMethodField()
+
     class Meta:
         model = Cars
         fields = '__all__'
-        '''fields = ['id', 'name', 'description', 'price', 'active', 'chassisnumber']
-           exclude = ('name',) '''
-    def get_discount_price(self, object):
-        get_discount_price = object.price - 1000
-        return discount_price
+
+    def get_discount_price(self, obj):
+        if obj.price is None:
+            return None
+        return obj.price - Decimal('1000.00')
 
     def validate_price(self, value):
         if value <= Decimal('200.00'):
-             raise serializers.ValidationError('Price must be greater than 200')
+            raise serializers.ValidationError('Price must be greater than 200')
         return value
 
     def validate(self, data):
-        if data['name'] == data['description']:
-            raise serializers.ValidationError('Name and description cannot be same')
+        if data.get('name') == data.get('description'):
+            raise serializers.ValidationError(
+                'Name and description cannot be same'
+            )
         return data
-
-
 
 #
 # class CarSerializer(serializers.Serializer):
