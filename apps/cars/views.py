@@ -1,100 +1,221 @@
-from django.shortcuts import render
-from .models import Cars,ShowRoom
-from django.http import JsonResponse
-from django.http import HttpResponse
-import json
-from .serializers import CarSerializer,ShowRoomSerializer
 from rest_framework.views import APIView
-from rest_framework.response import  Response
-from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from rest_framework import status
-from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, schema
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from .models import ShowRoom, Cars
+from .serializers import ShowRoomSerializer, CarSerializer
 
+# ---------------- ShowRoom APIs ----------------
 
-class Showroom_view(APIView):
+class ShowRoomListCreate(APIView):
+    """
+    GET /all/showrooms/
+        - Returns list of all showrooms
+        - Use Case: Display all showrooms to admin or users
 
+    POST /all/showrooms/
+        - Create one or multiple showrooms
+        - Use Case: Add new showrooms to the system
+        - Request Example:
+            [
+                {"name": "Luxury Motors", "location": "Lahore", "capacity": 30},
+                {"name": "Fast Wheels", "location": "Islamabad", "capacity": 40}
+            ]
+        - Response: JSON array of created showrooms
+    """
+
+    @swagger_auto_schema(
+        operation_description="Get all showrooms",
+        responses={200: ShowRoomSerializer(many=True)}
+    )
     def get(self, request):
-        shoowroom = ShowRoom.objects.all()
-        serializer = ShowRoomSerializer(shoowroom, many=True)
+        showrooms = ShowRoom.objects.all()
+        serializer = ShowRoomSerializer(showrooms, many=True)
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        operation_description="Create one or multiple showrooms",
+        request_body=ShowRoomSerializer(many=True),
+        responses={201: ShowRoomSerializer(many=True)}
+    )
     def post(self, request):
         many = isinstance(request.data, list)
         serializer = ShowRoomSerializer(data=request.data, many=many)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data,status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class showroom_detail(APIView):
 
+class ShowRoomDetail(APIView):
+    """
+    GET /all/showrooms/<pk>/
+        - Retrieve a showroom by ID
+        - Use Case: Show detailed info of a showroom
+
+    PUT /all/showrooms/<pk>/
+        - Replace entire showroom data (strict)
+        - All required fields must be provided
+
+    PATCH /all/showrooms/<pk>/
+        - Update only fields provided (partial update)
+
+    DELETE /all/showrooms/<pk>/
+        - Remove a showroom from the system
+    """
+
+    def get_object(self, pk):
+        return ShowRoom.objects.get(pk=pk)
+
+    @swagger_auto_schema(
+        operation_description="Get showroom details by ID",
+        responses={200: ShowRoomSerializer()}
+    )
     def get(self, request, pk):
-        showroom = get_object_or_404(ShowRoom, pk=pk)
+        try:
+            showroom = self.get_object(pk)
+        except ShowRoom.DoesNotExist:
+            return Response({'error': 'No Showroom Found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = ShowRoomSerializer(showroom)
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        operation_description="Full update of showroom (PUT)",
+        request_body=ShowRoomSerializer(),
+        responses={200: ShowRoomSerializer()}
+    )
     def put(self, request, pk):
-        showroom = get_object_or_404(ShowRoom, pk=pk)
-        serializer = ShowRoomSerializer(showroom, data=request.data)
+        try:
+            showroom = self.get_object(pk)
+        except ShowRoom.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = ShowRoomSerializer(showroom, data=request.data, partial=False)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk):
-        showroom = get_object_or_404(ShowRoom, pk=pk)
-        showroom.delete()
-        return Response(
-            {'message': 'Showroom deleted successfully'},
-            status=status.HTTP_204_NO_CONTENT
-        )
+    @swagger_auto_schema(
+        operation_description="Partial update of showroom (PATCH)",
+        request_body=ShowRoomSerializer(partial=True),
+        responses={200: ShowRoomSerializer()}
+    )
     def patch(self, request, pk):
-        showroom = get_object_or_404(ShowRoom, pk=pk)
+        try:
+            showroom = self.get_object(pk)
+        except ShowRoom.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = ShowRoomSerializer(showroom, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(
+        operation_description="Delete a showroom",
+        responses={204: 'Showroom deleted successfully'}
+    )
+    def delete(self, request, pk):
+        try:
+            showroom = self.get_object(pk)
+        except ShowRoom.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        showroom.delete()
+        return Response({'message': 'Showroom deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 
-''' ------------- Serializers Api get objects list --------------- '''
+# ---------------- Car APIs ----------------
+
+@swagger_auto_schema(
+    method='GET',
+    operation_description="Get list of all cars",
+    responses={200: CarSerializer(many=True)}
+)
+@swagger_auto_schema(
+    method='POST',
+    operation_description="Create one or multiple cars",
+    request_body=CarSerializer(many=True),
+    responses={201: CarSerializer(many=True)}
+)
 @api_view(['GET', 'POST'])
 def car_list_view(request):
+    """
+    GET /all/cars/
+        - List all cars
+
+    POST /all/cars/
+        - Create one or multiple cars
+    """
     if request.method == 'GET':
-        car = Cars.objects.all()
-        serializer = CarSerializer(car, many=True)
+        cars = Cars.objects.all()
+        serializer = CarSerializer(cars, many=True)
         return Response(serializer.data)
-    if request.method == 'POST':
+    elif request.method == 'POST':
         many = isinstance(request.data, list)
         serializer = CarSerializer(data=request.data, many=many)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        else :
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-''' ------------- Signal object api --------------- '''
-
-@api_view(['GET', 'PUT', 'DELETE'])
+@swagger_auto_schema(
+    method='GET',
+    operation_description="Retrieve car details by ID",
+    responses={200: CarSerializer()}
+)
+@swagger_auto_schema(
+    method='PUT',
+    operation_description="Full update of car",
+    request_body=CarSerializer(),
+    responses={200: CarSerializer()}
+)
+@swagger_auto_schema(
+    method='PATCH',
+    operation_description="Partial update of car",
+    request_body=CarSerializer(partial=True),
+    responses={200: CarSerializer()}
+)
+@swagger_auto_schema(
+    method='DELETE',
+    operation_description="Delete a car",
+    responses={204: 'Car deleted successfully'}
+)
+@api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 def car_detail_view(request, pk):
+    """
+    GET /all/cars/<pk>/
+        - Retrieve car by ID
+
+    PUT /all/cars/<pk>/
+        - Full update
+
+    PATCH /all/cars/<pk>/
+        - Partial update
+
+    DELETE /all/cars/<pk>/
+        - Remove car from system
+    """
     try:
         car = Cars.objects.get(pk=pk)
     except Cars.DoesNotExist:
-        return Response(
-            {'error': 'No Car Found'},
-            status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({'error': 'No Car Found'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = CarSerializer(car)
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        serializer = CarSerializer(car, data=request.data)
+        serializer = CarSerializer(car, data=request.data, partial=False)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'PATCH':
+        serializer = CarSerializer(car, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -102,42 +223,4 @@ def car_detail_view(request, pk):
 
     elif request.method == 'DELETE':
         car.delete()
-        return Response(
-            {'message': 'Car deleted successfully'},
-            status=status.HTTP_204_NO_CONTENT
-        )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''------------- ManualApiView --------------'''
-'''
-def car_list(request):
-    cars = Cars.objects.all()
-    data = {
-        'cars':list(cars.values()),
-    }
-    
-    data_json = json.dumps(data)
-    return HttpResponse(data_json, content_type='application/json')
-  #  return JsonResponse(data)
-
-def car_detail(request, pk):
-    car = Cars.objects.get(pk=pk)
-    data = {
-        'name':car.name,
-        'description':car.description,
-        'active':car.active
-    }
-    return JsonResponse(data)
-    '''
+        return Response({'message': 'Car deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
