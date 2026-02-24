@@ -27,7 +27,37 @@ class Showroom_view(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class showroom_detail(APIView):
 
+    def get(self, request, pk):
+        showroom = get_object_or_404(ShowRoom, pk=pk)
+        serializer = ShowRoomSerializer(showroom)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        showroom = get_object_or_404(ShowRoom, pk=pk)
+        serializer = ShowRoomSerializer(showroom, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        showroom = get_object_or_404(ShowRoom, pk=pk)
+        showroom.delete()
+        return Response(
+            {'message': 'Showroom deleted successfully'},
+            status=status.HTTP_204_NO_CONTENT
+        )
+    def patch(self, request, pk):
+        showroom = get_object_or_404(ShowRoom, pk=pk)
+        serializer = ShowRoomSerializer(showroom, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 ''' ------------- Serializers Api get objects list --------------- '''
@@ -38,7 +68,8 @@ def car_list_view(request):
         serializer = CarSerializer(car, many=True)
         return Response(serializer.data)
     if request.method == 'POST':
-        serializer = CarSerializer(data=request.data)
+        many = isinstance(request.data, list)
+        serializer = CarSerializer(data=request.data, many=many)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -50,30 +81,31 @@ def car_list_view(request):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def car_detail_view(request, pk):
-    if request.method == 'GET':
-        try:
-            car = Cars.objects.get(pk=pk)
-        except:
-            return Response({'Error':'No Car Found'},status=status.HTTP_404_NOT_FOUND)
+    try:
         car = Cars.objects.get(pk=pk)
+    except Cars.DoesNotExist:
+        return Response(
+            {'error': 'No Car Found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if request.method == 'GET':
         serializer = CarSerializer(car)
         return Response(serializer.data)
-    if request.method == 'PUT':
-        car = Cars.objects.get(pk=pk)
+
+    elif request.method == 'PUT':
         serializer = CarSerializer(car, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        else :
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    if request.method == 'DELETE':
-        car = Cars.objects.get(pk=pk)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
         car.delete()
-        return Response({'message':'Car Delete successfully'},status=status.HTTP_204_NO_CONTENT)
-    else:
-        car = Cars.objects.get(pk=pk)
-
-
+        return Response(
+            {'message': 'Car deleted successfully'},
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 
 
