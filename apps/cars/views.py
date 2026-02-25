@@ -25,7 +25,7 @@ class ShowRoomListCreate(APIView):
     )
     def get(self, request):
         showrooms = ShowRoom.objects.all()
-        serializer = ShowRoomSerializer(showrooms, many=True)
+        serializer = ShowRoomSerializer(showrooms, many=True, context={'request': request})
         return Response(serializer.data)
 
     @swagger_auto_schema(
