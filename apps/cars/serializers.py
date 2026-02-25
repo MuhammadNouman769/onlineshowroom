@@ -1,12 +1,20 @@
 """ ============== IMPORTS =============== """
-
 from decimal import Decimal
 from glob import magic_check_bytes
-
 from rest_framework import serializers
-from .models import Cars, ShowRoom
+from .models import Cars, ShowRoom, Review
 from .validators import alphanumeric
 
+
+""" ============== Review ModelSerializer =============== """
+class ReviewSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Review model.
+    Includes all fields of the model.
+    """
+    class Meta:
+        model = Review
+        fields = '__all__'
 
 
 """ ============== Car ModelSerializer =============== """
@@ -18,6 +26,7 @@ class CarModelSerializer(serializers.ModelSerializer):
     Includes validations for price and cross-field checks.
     """
     discount_price = serializers.SerializerMethodField()
+    reviews = ReviewSerializer(many=True, read_only=True)
 
     class Meta:
         model = Cars
@@ -64,7 +73,6 @@ class ShowRoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShowRoom
         fields = '__all__'
-
 
 
 
