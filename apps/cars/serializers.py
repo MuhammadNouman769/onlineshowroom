@@ -1,21 +1,12 @@
 """ ============== IMPORTS =============== """
 
 from decimal import Decimal
+from glob import magic_check_bytes
+
 from rest_framework import serializers
 from .models import Cars, ShowRoom
 from .validators import alphanumeric
 
-
-""" ============== ShowRoom ModelSerializer =============== """
-
-class ShowRoomSerializer(serializers.ModelSerializer):
-    """
-    Serializer for ShowRoom model.
-    Includes all fields of the model.
-    """
-    class Meta:
-        model = ShowRoom
-        fields = '__all__'
 
 
 """ ============== Car ModelSerializer =============== """
@@ -58,6 +49,23 @@ class CarModelSerializer(serializers.ModelSerializer):
         if data.get('name') and data.get('description') and data['name'] == data['description']:
             raise serializers.ValidationError('Name and description cannot be the same')
         return data
+
+""" ============== ShowRoom ModelSerializer =============== """
+
+class ShowRoomSerializer(serializers.ModelSerializer):
+   #cars = CarModelSerializer(many=True, read_only=True)
+   # cars = serializers.StringRelatedField(many=True)
+   # cars = serializers.PrimaryKeyRelatedField(many=True, queryset=Cars.objects.all())
+    cars = serializers.HyperlinkedRelatedField(many=True, view_name='car_detail', read_only=True)
+    """
+    Serializer for ShowRoom model.
+    Includes all fields of the model.
+    """
+    class Meta:
+        model = ShowRoom
+        fields = '__all__'
+
+
 
 
 """ ============== Car Serializer =============== """
