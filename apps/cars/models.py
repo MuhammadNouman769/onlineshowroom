@@ -1,10 +1,10 @@
-''''''
-from contextlib import nullcontext
 
 """ ============== IMPORTS =============== """
+from contextlib import nullcontext
 from wsgiref.validate import validator
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 def alphanumeric(value):
@@ -35,8 +35,40 @@ class Cars(models.Model):
         null=True,
         blank=True
     )
-    showroom = models.ForeignKey(ShowRoom, related_name='cars', on_delete=models.CASCADE, null=True, blank=True)
+    showroom = models.ForeignKey(ShowRoom, related_name='cars', on_delete=models.CASCADE,default=1 )
     def __str__(self):
         if self.name:
             return self.name
         return f"Car {self.id}"
+
+
+class Review(models.Model):
+    car = models.ForeignKey(Cars,related_name='reviews' ,on_delete=models.CASCADE,null=True, blank=True)
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.CharField(max_length=500, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Rating {self.rating} for {self.car.name}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
