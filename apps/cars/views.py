@@ -6,7 +6,9 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from drf_yasg.utils import swagger_auto_schema
 from .models import ShowRoom, Cars
-from .serializers import ShowRoomSerializer, CarSerializer
+from .serializers import ShowRoomSerializer, CarModelSerializer, CarModelSerializer
+from rest_framework import generics
+
 
 
 # ---------------- ShowRoom APIs ----------------
@@ -115,13 +117,13 @@ class ShowRoomDetail(APIView):
 @swagger_auto_schema(
     method='GET',
     operation_description="Get list of all cars",
-    responses={200: CarSerializer(many=True)}
+    responses={200: CarModelSerializer(many=True)}
 )
 @swagger_auto_schema(
     method='POST',
     operation_description="Create one or multiple cars",
-    request_body=CarSerializer(many=True),
-    responses={201: CarSerializer(many=True)}
+    request_body=CarModelSerializer(many=True),
+    responses={201: CarModelSerializer(many=True)}
 )
 @api_view(['GET', 'POST'])
 def car_list_view(request):
@@ -131,11 +133,11 @@ def car_list_view(request):
     """
     if request.method == 'GET':
         cars = Cars.objects.all()
-        serializer = CarSerializer(cars, many=True)
+        serializer = CarModelSerializer(cars, many=True)
         return Response(serializer.data)
 
     many = isinstance(request.data, list)
-    serializer = CarSerializer(data=request.data, many=many)
+    serializer = CarModelSerializer(data=request.data, many=many)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -145,19 +147,19 @@ def car_list_view(request):
 @swagger_auto_schema(
     method='GET',
     operation_description="Retrieve car details by ID",
-    responses={200: CarSerializer()}
+    responses={200: CarModelSerializer()}
 )
 @swagger_auto_schema(
     method='PUT',
     operation_description="Full update of car",
-    request_body=CarSerializer(),
-    responses={200: CarSerializer()}
+    request_body=CarModelSerializer(),
+    responses={200: CarModelSerializer()}
 )
 @swagger_auto_schema(
     method='PATCH',
     operation_description="Partial update of car",
-    request_body=CarSerializer(partial=True),
-    responses={200: CarSerializer()}
+    request_body=CarModelSerializer(partial=True),
+    responses={200: CarModelSerializer()}
 )
 @swagger_auto_schema(
     method='DELETE',
@@ -178,18 +180,18 @@ def car_detail_view(request, pk):
         return Response({'error': 'No Car Found'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = CarSerializer(car)
+        serializer = CarModelSerializer(car)
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        serializer = CarSerializer(car, data=request.data)
+        serializer = CarModelSerializer(car, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'PATCH':
-        serializer = CarSerializer(car, data=request.data, partial=True)
+        serializer = CarModelSerializer(car, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
