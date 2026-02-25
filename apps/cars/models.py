@@ -1,4 +1,6 @@
 ''''''
+from contextlib import nullcontext
+
 """ ============== IMPORTS =============== """
 from wsgiref.validate import validator
 from django.db import models
@@ -33,6 +35,7 @@ class Cars(models.Model):
         null=True,
         blank=True
     )
+    showroom = models.ForeignKey(ShowRoom, related_name='cars', on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
         if self.name:
             return self.name
