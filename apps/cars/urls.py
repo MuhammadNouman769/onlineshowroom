@@ -9,4 +9,6 @@ urlpatterns = [
     # ShowRooms
     path('showrooms/', views.ShowRoomListCreate.as_view(), name='showroom_list'),
     path('showrooms/<int:pk>/', views.ShowRoomDetail.as_view(), name='showroom_detail'),
+    path('reviews/', views.ReviewListCreateView.as_view(), name='review_list'),
+    path('reviews/<int:pk>/', views.ReviewDetail.as_view(), name='review_detail'),
 ]
