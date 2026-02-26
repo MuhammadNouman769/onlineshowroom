@@ -38,6 +38,7 @@ urlpatterns = [
 
     # App API routes
     path('api/', include('apps.cars.urls')),
+    path('api/',include('rest_framework.urls', namespace='rest_framework')),
 
     # Swagger UI (drf_yasg)
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
