@@ -50,7 +50,7 @@ class Review(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Rating {self.rating} for {self.car.name}"
+        return " the rating of " + self.car.name + " :---- " + str(self.rating)
 
 
 
